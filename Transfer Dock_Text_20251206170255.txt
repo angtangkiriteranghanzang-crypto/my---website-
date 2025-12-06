@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Teleporting "No" — Playful Page</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#7c3aed}
+    html,body{height:100%;overflow:hidden;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(120deg,#07102a,#102030);color:#e6eef8}
+    .wrap{min-height:100vh;height:100vh;display:flex;align-items:center;justify-content:center;padding:0;margin:0}
+    .card{background:rgba(255,255,255,0.03);border-radius:16px;padding:28px;max-width:720px;width:100%;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    h1{margin:0 0 8px;font-size:28px}
+    p{margin:0 0 18px;color:#cfe6ff}
+    .buttons{display:flex;gap:16px}
+    button{padding:12px 20px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .yes{background:linear-gradient(90deg,#10b981,#06b6d4);color:#02111a}
+    .no{background:linear-gradient(90deg,#ef4444,#f97316);color:white;position:relative}
+    .status{margin-top:16px;color:#cbd5e1}
+    /* teleport animation */
+    .teleport-enter{animation:flash 360ms ease-in-out}
+    @keyframes flash{0%{opacity:1;transform:scale(1)}50%{opacity:0.02;transform:scale(0.92)}100%{opacity:1;transform:scale(1)}}
+    /* playful moving no button on small screens */
+    @media (max-width:520px){.buttons{flex-direction:column;align-items:stretch} .no{width:100%}}
+    /* fun backgrounds for rooms */
+    .scene{height:180px;border-radius:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="card">
+      <div class="scene" id="scene" style="background:linear-gradient(90deg,#0ea5a2,#7c3aed);"> 🌌 Welcome to the Proposal Game</div>
+      <h1>Do you accept this silly proposal?</h1>
+      <p>Send this page to a friend — they can click <strong>Yes</strong> or <strong>No</strong>. But beware: the <em>No</em> button doesn't behave the way they expect...</p>
+      <div class="buttons">
+        <button class="yes" id="yesBtn">Yes</button>
+        <button class="no" id="noBtn">No</button>
+      </div>
+      <div class="status" id="status">Choose wisely — or don't.</div>
+    </div>
+  </div>
+
+  <script>
+    // Welcome popup on load
+    window.addEventListener('load', ()=>{
+      alert('Welcome! Ready to choose? 😄');
+    });
+    // Scenes the "No" button teleports the user to.
+    const scenes = [
+      {bg: 'linear-gradient(90deg,#0ea5a2,#7c3aed)', text: 'You teleported to the Star Lounge ✨'},
+      {bg: 'linear-gradient(90deg,#f97316,#ef4444)', text: 'You landed in the Spicy Canteen 🌶️'},
+      {bg: 'linear-gradient(90deg,#06b6d4,#3b82f6)', text: 'Welcome to the Pool of Ideas 🏊'},
+      {bg: 'linear-gradient(90deg,#34d399,#84cc16)', text: 'Suddenly you are in the Greenhouse 🌿'},
+      {bg: 'linear-gradient(90deg,#f472b6,#fb7185)', text: 'A confetti dimension appears 🎉'}
+    ];
+
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const status = document.getElementById('status');
+    const scene = document.getElementById('scene');
+    const card = document.getElementById('card');
+
+    let teleportIndex = 0;
+    let noClickCount = 0;
+    const noMessages = [
+      'Are you sure? 🤔',
+      'Think again... 👀',
+      'Choose wisely 😶',
+      'Try Yes maybe? 😌',
+      'Last chance 😳',
+      'Still No?? 😵'
+    ];
+
+    yesBtn.addEventListener('click', ()=>{
+      status.textContent = 'Yay! i knew u would chose yess 😊';
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      startFireworks();
+      card.classList.add('teleport-enter');
+      setTimeout(()=>card.classList.remove('teleport-enter'),400);
+    });('click', ()=>{
+      status.textContent = 'Yay! i knew u would chose yess 😊';
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      card.classList.add('teleport-enter');
+      setTimeout(()=>card.classList.remove('teleport-enter'),400);
+    });
+
+    // When No is clicked, teleport to the next scene.
+    noBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      // small dodge effect: if fast click, the button jumps
+      dodgeNoButtonRandomly();
+      teleportToNextScene();
+      updateNoButtonText();();
+    });
+
+    function teleportToNextScene(){
+      teleportIndex = (teleportIndex + 1) % scenes.length;
+      const s = scenes[teleportIndex];
+      scene.style.background = s.bg;
+      scene.textContent = s.text;
+      status.textContent = 'The No option cannot be chosen — it teleported you instead!';
+      card.classList.add('teleport-enter');
+      setTimeout(()=>card.classList.remove('teleport-enter'),420);
+
+      // occasionally make the No button run away for extra fun
+      if(Math.random() < 0.45){
+        runAwayNoBtn();
+      }
+    }
+
+    function runAwayNoBtn(){
+      // position the button absolutely within the card for a moment
+      const rect = card.getBoundingClientRect();
+      noBtn.style.position = 'absolute';
+      // pick a random spot inside the card (keeping margins)
+      const x = Math.random() * (rect.width - 120) + 10;
+      const y = Math.random() * (rect.height - 60) + 100;
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+      noBtn.style.transition = 'all 420ms cubic-bezier(.2,.9,.3,1)';
+      setTimeout(()=>{
+        // return to normal layout after a bit
+        noBtn.style.position = '';
+        noBtn.style.left = '';
+        noBtn.style.top = '';
+        noBtn.style.transition = '';
+      },900);
+    }
+
+    function dodgeNoButtonRandomly(){
+      // small quick nudge to make clicks miss sometimes
+      if(Math.random() < 0.6){
+        const move = 60 + Math.random()*80;
+        noBtn.style.transform = `translateX(${(Math.random()<0.5? -1:1)*move}px)`;
+        noBtn.style.transition = 'transform 220ms ease-out';
+        setTimeout(()=>{ noBtn.style.transform = ''; noBtn.style.transition=''; },300);
+      }
+    }
+
+    function updateNoButtonText(){
+      noClickCount++;
+      if(noClickCount < noMessages.length){
+        noBtn.textContent = noMessages[noClickCount];
+      } else {
+        noBtn.textContent = 'Just press Yes already 😂';
+      }
+    }
+
+    // make the page share-friendly: allow saving state so the sender can customize scenes
+    // (This is optional: not required to use — but shows how to edit scenes.)
+    function startFireworks(){
+      const canvas = document.getElementById('fireworksCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.display = 'block';
+      const particles = [];
+      for(let i=0;i<120;i++){
+        particles.push({
+          x: canvas.width/2,
+          y: canvas.height/2,
+          angle: Math.random()*Math.PI*2,
+          speed: 2 + Math.random()*4,
+          size: 2 + Math.random()*3,
+          life: 50 + Math.random()*40
+        });
+      }
+      function animate(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach((p,i)=>{
+          p.x += Math.cos(p.angle)*p.speed;
+          p.y += Math.sin(p.angle)*p.speed;
+          p.life--;
+          ctx.fillStyle = `hsl(${Math.random()*360},100%,60%)`;
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+          ctx.fill();
+          if(p.life<=0) particles.splice(i,1);
+        });
+        if(particles.length>0) requestAnimationFrame(animate);
+        else canvas.style.display='none';
+      }
+      animate();
+    }
+
+    // --- End of script ---
+  </script>
+  <canvas id="fireworksCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;display:none;"></canvas>
+  <audio id="bg-music" autoplay loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_b65ec4c8e6.mp3" type="audio/mpeg">
+  </audio>
+</body>
+</html>
